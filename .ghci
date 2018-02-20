@@ -1,1 +1,1 @@
-:seti -XTypeOperators -XOverloadedStrings
+:seti -XTypeOperators -XOverloadedStrings -XFlexibleContexts

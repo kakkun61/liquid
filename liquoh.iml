@@ -158,5 +158,6 @@
     <orderEntry type="library" name="unordered-containers-0.2.8.0" level="project" />
     <orderEntry type="library" name="uuid-types-1.0.3" level="project" />
     <orderEntry type="library" name="void-0.7.2" level="project" />
+    <orderEntry type="library" name="attoparsec-expr-0.1.1.2" level="project" />
   </component>
 </module>

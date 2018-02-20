@@ -23,10 +23,11 @@ spec = do
         template =
           [ if_
               [ ( bool True :: Expression E.Shopify
-                , plain "foo" :: Template (Expression E.Shopify) T.Shopify)
+                , [ plain "foo" :: Template (Expression E.Shopify) T.Shopify ]
+                )
               ] :: Template (Expression E.Shopify) T.Shopify
           ]
-      interpret context template `shouldBe` Right (context, "foo")
+      interpret' context template `shouldBe` Right (context, "foo")
 
   describe "for" $
     it "for x in xs" $ do
@@ -40,4 +41,4 @@ spec = do
               :: Template (Expression E.Shopify) T.Shopify
           ]
         context' = unsafeAttachContext context "bar" $ Number 3
-      interpret context template `shouldBe` Right (context', "123")
+      interpret' context template `shouldBe` Right (context', "123")

@@ -2,92 +2,89 @@
 = BNF
 
 @
-template := template-element template
+Template := Template-element Template
 
-template-element := plain-text
-                    {{ expression }}
-                    {{ expression | filter }}
-                    {% tag %}
+Template-element := Plain-text
+                    {{ Expression }} # output
+                    {{ Expression | Filter }}
+                    {% break %}
+                    {% continue %}
+                    Comment
+                    If-template
+                    Case-template
+                    For-template
+                    Assign-template
 
-value := \/-?[1-9][0-9]*(.[0-9]*)?\/ # number
+Template-break := Template-break-element Template-break
+
+Template-break-element := Template-element
+                          break
+
+Value := \/-?[1-9][0-9]*(.[0-9]*)?\/ # number
          \/"[A-z_]+[A-z_0-9]*"\/ # string
          true
          false
          nil
          array
 
-variable := variable-name
-            variable.variable-name
+Variable := Variable-name
+            Variable.Variable-name
 
-variable-name := \/[A-z]+\/
+Variable-name := \/[A-z]+\/
 
-tag := # comment
-       comment
-       endcomment
+Comment := {% comment %} \/.*\/ {% endcomment %}
 
-       # control flow
-       if expression
-       endif
-       unless exression
-       endunless
-       elsif expression
-       else
-       case expression
-       when expression
-       endcase
+If-template := {% if Expression %} Template {% endif %}
+               {% if Expression %} Template Else-list {% endif %}
 
-       # iteration
-       for variable-name in expresson
-       endfor
-       break
-       continue
-       cycle expression-list
-       cycle expression: expression-list
-       tablerow variable-name in expression
+Else-list := {% else %} Template
+             {% elsif Expression %} Template Else-list
 
-       # raw
-       raw
-       endraw
+Unless-template := {% unless Expression %} Template {% endunless %}
 
-       # variable
-       assign variable-name = expression
-       capture variable-name
-       endcapture
-       increment variable-name
-       decrement variable-name
+Case-template := {% case Expression %} When-list {% endcase %}
 
-       # filter
-       expression | filter
+When-list := {% when Expression %} Template When-list
 
-expression := value
-              variable
+For-template := {% for Variable-name in Expression %} Template {% endfor %}
 
-              # binary operator
-              expression < expression
-              expression <= expression
-              expression > expression
-              expression >= expression
-              expression == expression
-              expression != expression
-              expression && expression
-              expression || expression
-              expression contains expression
+Assign-template := {% assign Variable-name = Expression %}
 
-              # array
-              expression[expression]
-              expression array-parameters
-              (expression..expression)
+--tag := cycle Expression-list
+--       cycle Expression: Expression-list
+--
+--       tablerow Variable-name in Expression
+--
+--       # raw
+--       raw
+--       endraw
+--
+--       capture Variable-name
+--       endcapture
+--
+--       increment Variable-name
+--       decrement Variable-name
 
-array := expression-without-array-without-parenthesis, array
+Term := Value
+        Variable
+        Expression[Expression]
+        Expression array-parameters
+        (Expression..Expression)
 
-expression-without-raw-array := expression \ array
+Expression := Operand: Term
+              Operator:
+                Infix Left or
+                Infix Left and
+                Infix Non ==, !=
+                Infix Non <, <=, >, >=, contains
+                Infix Left ,
 
-array-parameters := limit:exression array-parameters
-                    offset:expression array-parameters
+array-parameters := limit:Expression array-parameters
+                    offset:Expression array-parameters
                     reversed array-parameters
 
 filter := abs
-          append expression
+          append Expression
 @
 -}
 module Text.Liquoh

@@ -16,12 +16,16 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Text.Liquoh
+                     , Text.Liquoh.Helper
                      , Text.Liquoh.Interpreter
+                     , Text.Liquoh.Interpreter.Common
                      , Text.Liquoh.Interpreter.Template
                      , Text.Liquoh.Interpreter.Expression
+                     , Text.Liquoh.Parser
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , attoparsec
+                     , attoparsec-expr
                      , convertible
                      , lens
                      , lens-aeson
@@ -35,9 +39,11 @@ test-suite liquoh-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   other-modules:       Text.Liquoh.Interpreter.TemplateSpec
+                     , Text.Liquoh.ParserSpec
   main-is:             Spec.hs
   build-depends:       base
                      , aeson
+                     , attoparsec
                      , liquoh
                      , hspec
                      , QuickCheck

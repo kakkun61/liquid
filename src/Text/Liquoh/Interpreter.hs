@@ -1,31 +1,77 @@
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
 
-module Text.Liquoh.Interpreter where
+module Text.Liquoh.Interpreter
+  (
+  -- | = Common
+    (C.:<:)
+  , (C.:+:)
+  , C.Result
+  , C.Context
 
-import qualified Data.Aeson as Aeson
-import qualified Data.Text as Text
+  -- | = Expression
+  , E.evaluate
+  , E.Expression
+  , ShopifyExpression
+  , ShopifyExpressionSuper
 
-data (f :+: g) e = InjectLeft (f e) | InjectRight (g e)
-  deriving (Show, Functor)
-infixr 8 :+:
+  , E.Value
+  , E.Variable
+  , E.Less
+  , E.LessEqual
+  , E.Grater
+  , E.GraterEqual
+  , E.Equal
+  , E.NotEqual
+  , E.And
+  , E.Or
+  , E.ArrayAt
 
-class (Functor sub, Functor sup) => sub :<: sup where
-  inj :: sub a -> sup a
+  , E.number
+  , E.string
+  , E.bool
+  , E.nil
+  , E.array
+  , E.variable
+  , (E..<.)
+  , (E..<=.)
+  , (E..>.)
+  , (E..>=.)
+  , (E..==.)
+  , (E../=.)
+  , (E..&&.)
+  , (E..||.)
 
-instance {-# OVERLAPPABLE #-} (Functor f, Functor g, f ~ g) => f :<: g where
-  inj = id
+  , E.VariablePath
+  , E.VariableName (..)
 
-instance {-# OVERLAPPING #-} (Functor f, Functor g) => f :<: (f :+: g) where
-  inj = InjectLeft
+  -- | = Template
+  , T.interpret
+  , T.Template
+  , ShopifyTemplate
+  , ShopifyTemplateSuper
 
-instance {-# OVERLAPPING #-} (Functor f, Functor g, Functor h, f :<: g) => f :<: (h :+: g) where
-  inj = InjectRight . inj
+  , T.Plain
+  , T.Output
+  , T.If
+  , T.Case
+  , T.For
+  , T.Assign
 
-type Result = Either Text.Text
+  , T.plain
+  , T.output
+  , T.if_
+  , T.case_
+  , T.for
+  , T.assign
+  ) where
 
-type Context = Aeson.Value
+import qualified Text.Liquoh.Interpreter.Common as C
+import qualified Text.Liquoh.Interpreter.Expression as E
+import qualified Text.Liquoh.Interpreter.Template as T
+
+type ShopifyExpression = E.Expression E.Shopify
+type ShopifyTemplate = T.Template ShopifyExpression T.Shopify
+
+type ShopifyExpressionSuper e = E.ShopifySuper e
+type ShopifyTemplateSuper e t = T.ShopifySuper e t
