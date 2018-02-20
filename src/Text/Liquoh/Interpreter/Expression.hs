@@ -6,6 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Text.Liquoh.Interpreter.Expression where
 
@@ -20,7 +21,8 @@ import qualified Data.Scientific as Scientific
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 
-import Text.Liquoh.Interpreter
+import Text.Liquoh.Common
+import Text.Liquoh.Interpreter.Common
 
 newtype Expression f = Inject (f (Expression f))
 
@@ -41,6 +43,12 @@ inject :: g :<: f => g (Expression f) -> Expression f
 inject = Inject . inj
 
 type Shopify = Value :+: Variable :+: Less :+: LessEqual :+: Grater :+: GraterEqual :+: Equal :+: NotEqual :+: And :+: Or :+: ArrayAt
+type ShopifySuper e =
+  ( Value :<: e, Variable :<: e
+  , Less :<: e, LessEqual :<: e, Grater :<: e, GraterEqual :<: e, Equal :<: e, NotEqual :<: e
+  , And :<: e, Or :<: e
+  , ArrayAt :<: e
+  )
 
 -- Value
 
@@ -112,13 +120,11 @@ render (Array a) = Text.pack $ show a
 
 -- Variable
 
-data VariableData = VariableData VariablePath
-
-newtype Variable e = Variable VariableData
+newtype Variable e = Variable VariablePath
   deriving Functor
 
 instance Evaluate Variable where
-  evaluateAlgebra c (Variable (VariableData p)) = evaluateVariable c p
+  evaluateAlgebra c (Variable p) = evaluateVariable c p
 
 type VariablePath = NonEmptyList.NonEmpty VariableName
 
@@ -126,7 +132,7 @@ data VariableName = ObjectKey Text.Text | ArrayKey Int
   deriving (Show, Eq)
 
 variable :: Variable :<: f => VariablePath -> Expression f
-variable = inject . Variable . VariableData
+variable = inject . Variable
 
 evaluateVariable :: Context -> VariablePath -> Result ValueData
 evaluateVariable c p

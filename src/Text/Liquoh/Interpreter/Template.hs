@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Text.Liquoh.Interpreter.Template where
 
@@ -15,7 +16,8 @@ import Data.Foldable (foldl')
 import Data.Monoid
 import qualified Data.Text as Text
 
-import Text.Liquoh.Interpreter
+import Text.Liquoh.Common
+import Text.Liquoh.Interpreter.Common
 import Text.Liquoh.Interpreter.Expression hiding (Inject, inject, Shopify, at)
 import qualified Text.Liquoh.Interpreter.Expression as E
 
@@ -31,21 +33,25 @@ instance (Interpret f, Interpret g) => Interpret (f :+: g) where
   interpretAlgebra (InjectLeft x) = interpretAlgebra x
   interpretAlgebra (InjectRight x) = interpretAlgebra x
 
-interpret :: (Evaluate f, Interpret g) => Context -> [Template (Expression f) g] -> Result (Context, Text.Text)
-interpret c ts =
-  go c ts Text.empty
+interpret :: (Evaluate f, Interpret g) => Context -> [Template (Expression f) g] -> Result Text.Text
+interpret c ts = snd <$> interpret' c ts
+
+interpret' :: (Evaluate f, Interpret g) => Context -> [Template (Expression f) g] -> Result (Context, Text.Text)
+interpret' c ts =
+  foldl' go (Right (c, Text.empty)) ts
   where
-    go :: (Evaluate f, Interpret g) => Context -> [Template (Expression f) g] -> Text.Text -> Result (Context, Text.Text)
-    go c' (t:r) acc =
-      case foldTemplate interpretAlgebra t c' of
-        Right (c'', a) -> go c'' r (acc <> a)
-        f -> f
-    go c' [] acc = Right (c', acc)
+    go :: (Evaluate f, Interpret g) => Result (Context, Text.Text) -> Template (Expression f) g -> Result (Context, Text.Text)
+    go (Right (c', acc)) t = do
+      (c'', a) <- foldTemplate interpretAlgebra t c'
+      pure (c'', acc <> a)
+    go r@(Left _) _ = r
 
 inject :: g :<: f => g (Template (Expression h) f) -> Template (Expression h) f
 inject = Inject . inj
 
 type Shopify = Plain :+: Output E.Shopify :+: If E.Shopify :+: Case E.Shopify :+: For E.Shopify :+: Assign E.Shopify
+type ShopifySuper e t =
+  (Plain :<: t, Output e :<: t, If e :<: t, Case e :<: t, For e :<: t, Assign e :<: t)
 
 -- Plain Text
 
@@ -73,23 +79,23 @@ output = inject . Output
 
 -- If
 
-data If e t = If [(Expression e, t)]
+data If e t = If [(Expression e, [t])]
   deriving Functor
 
 instance Evaluate e => Interpret (If e) where
-  interpretAlgebra (If ((p, t):r)) c = do
+  interpretAlgebra (If ((p, ts):r)) c = do
     v <- evaluate c p
     if asBool v
-      then t c
+      then interpretTemplates ts c
       else interpretAlgebra (If r) c
   interpretAlgebra (If []) c = Right $ (c, Text.empty)
 
-if_ :: If e :<: f => [(Expression e, Template (Expression e) f)] -> Template (Expression e) f
+if_ :: If e :<: f => [(Expression e, [Template (Expression e) f])] -> Template (Expression e) f
 if_ = inject . If
 
 -- Case
 
-data Case e t = Case (Expression e) [(Expression e, t)]
+data Case e t = Case (Expression e) [(Expression e, [t])]
   deriving Functor
 
 instance Evaluate e => Interpret (Case e) where
@@ -97,15 +103,15 @@ instance Evaluate e => Interpret (Case e) where
     v <- evaluate c e
     go v cs c
     where
-      go :: Evaluate e => ValueData -> [(Expression e, Context -> Result (Context, Text.Text))] ->  Context -> Result (Context, Text.Text)
+      go :: Evaluate e => ValueData -> [(Expression e, [Context -> Result (Context, Text.Text)])] ->  Context -> Result (Context, Text.Text)
       go _ [] c' = Right (c', Text.empty)
-      go v ((p, t):r) c' = do
+      go v ((p, ts):r) c' = do
         pv <- evaluate c' p
         if v == pv
-          then t c'
+          then interpretTemplates ts c'
           else go v r c'
 
-case_ :: Case e :<: f => Expression e -> [(Expression e, Template (Expression e) f)] -> Template (Expression e) f
+case_ :: Case e :<: f => Expression e -> [(Expression e, [Template (Expression e) f])] -> Template (Expression e) f
 case_ e cs = inject $ Case e cs
 
 -- For
@@ -161,3 +167,13 @@ unsafeAttachContext c n v =
   case attachContext c n v of
     Right c' -> c'
     Left err -> error $ Text.unpack err
+
+interpretTemplates :: [Context -> Result (Context, Text.Text)] -> Context -> Result (Context, Text.Text)
+interpretTemplates ts c =
+  foldl' eachSubTemplate (Right (c, Text.empty)) ts
+  where
+    eachSubTemplate :: Result (Context, Text.Text) -> (Context -> Result (Context, Text.Text)) -> Result (Context, Text.Text)
+    eachSubTemplate (Right (c', r)) f = do
+      (c'', r') <- f c'
+      pure (c'', r <> r')
+    eachSubTemplate (Left err) _ = Left err
