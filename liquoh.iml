@@ -159,5 +159,10 @@
     <orderEntry type="library" name="uuid-types-1.0.3" level="project" />
     <orderEntry type="library" name="void-0.7.2" level="project" />
     <orderEntry type="library" name="attoparsec-expr-0.1.1.2" level="project" />
+    <orderEntry type="library" name="monads-tf-0.1.0.3" level="project" />
+    <orderEntry type="library" name="options-1.2.1.1" level="project" />
+    <orderEntry type="library" name="monads-tf-0.1.0.3" level="project" />
+    <orderEntry type="library" name="options-1.2.1.1" level="project" />
+    <orderEntry type="library" name="utf8-string-1.0.1.1" level="project" />
   </component>
 </module>

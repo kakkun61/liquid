@@ -60,7 +60,10 @@ executable liquoh
   build-depends:       base
                      , liquoh
                      , aeson
+                     , bytestring
+                     , options
                      , text
+                     , utf8-string
   default-language:    Haskell2010
   ghc-options:         -Wall
 
