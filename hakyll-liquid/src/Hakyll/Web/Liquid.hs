@@ -1,48 +1,34 @@
 module Hakyll.Web.Liquid
   ( parseAndInterpretDefault
   , parseAndInterpret
-  , parseAndInterpret'
-  , parse
-  , interpret
-  , interpret'
   ) where
 
-import Control.Monad.Error.Class
+import Control.Monad.Catch (MonadThrow (throwM), Exception (displayException))
+import Control.Monad.Except (MonadError (throwError))
 import qualified Data.Aeson as Aeson
+import Data.Text (Text)
 import qualified Data.Text as Text
 import Hakyll
 import Hakyll.Core.Compiler
-import qualified Text.Liquoh as Liquid
+import qualified Text.Liquor.Jekyll as Liquid
 
 -- | Parse underlying item and compile it with its metadata as context.
 parseAndInterpretDefault :: Compiler (Item String)
 parseAndInterpretDefault = do
   metadata <- getMetadata =<< getUnderlying
-  item <- getResourceBody
-  parse item >>= interpret metadata
+  parseAndInterpret metadata
 
 -- | Parse underlying item and compile it with given metadata as context.
 parseAndInterpret :: Metadata -> Compiler (Item String)
-parseAndInterpret metadata = getResourceBody >>= parse >>= interpret metadata
+parseAndInterpret metadata = do
+  Item identifier body <- getResourceBody
+  Item identifier . Text.unpack <$> Liquid.loadAndParseAndInterpret metadata (toFilePath identifier) load' (Liquid.parse :: Text -> Liquid.Result Liquid.JekyllTemplate)
+  where
+    load' :: FilePath -> Compiler (Text, Liquid.Context)
+    load' filePath = do
+      Item identifier body <- load $ fromFilePath filePath
+      metadata <- getMetadata identifier
+      pure (Text.pack body, metadata)
 
--- | Parse underlying item and compile it with given context.
-parseAndInterpret' :: Aeson.Value -> Compiler (Item String)
-parseAndInterpret' context = getResourceBody >>= parse >>= interpret' context
-
--- | Parse given item.
-parse :: Item String -> Compiler (Item [Liquid.ShopifyTemplate])
-parse (Item identifier body) =
-  case Liquid.parse (Text.pack body) of
-    Right template -> return $ Item identifier template
-    Left err -> throwError [Text.unpack err]
-
--- | Compile Liquid expressions with given metadata as context.
-interpret :: Metadata -> Item [Liquid.ShopifyTemplate] -> Compiler (Item String)
-interpret metadata = interpret' (Aeson.Object metadata)
-
--- | Compile Liquid expressions with given context.
-interpret' :: Aeson.Value -> Item [Liquid.ShopifyTemplate] -> Compiler (Item String)
-interpret' context (Item identifier template) =
-  case Liquid.interpret context template of
-    Right text -> return $ Item identifier $ Text.unpack text
-    Left err -> throwError [Text.unpack err]
+instance MonadThrow Compiler where
+  throwM = throwError . (:[]) . displayException

@@ -3,7 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" filepath="$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/liquoh/liquoh.iml" filepath="$PROJECT_DIR$/liquoh/liquoh.iml" />
+      <module fileurl="file://$PROJECT_DIR$/liquor/liquor.iml" filepath="$PROJECT_DIR$/liquor/liquor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/liquor-jekyll/liquor-jekyll.iml" filepath="$PROJECT_DIR$/liquor-jekyll/liquor-jekyll.iml" />
     </modules>
   </component>
 </project>

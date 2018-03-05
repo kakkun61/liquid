@@ -1,5 +1,6 @@
 resolver: lts-10.5
 
 packages:
-- liquoh
+- liquor
+- liquor-jekyll
 - hakyll-liquid

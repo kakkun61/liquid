@@ -20,12 +20,14 @@ library
   build-depends:       base
                      , aeson
                      , attoparsec
+                     , exceptions
                      , hakyll
-                     , liquoh
+                     , liquor-jekyll
                      , mtl
                      , text
                      , validation
   default-language:    Haskell2010
+  ghc-options:         -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
 
 source-repository head
   type:     git
