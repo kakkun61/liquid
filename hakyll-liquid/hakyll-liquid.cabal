@@ -1,0 +1,32 @@
+name:                hakyll-liquid
+version:             0.1.0.0
+synopsis:            Hakyll Liquid compiler
+homepage:            https://github.com/kakkun61/hakyll-liquid
+license:             BSD3
+license-file:        LICENSE
+author:              Kazuki Okamoto
+maintainer:          kazuki.okamoto@kakkun61.com
+copyright:           2018 Kazuki Okamoto
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+description:
+  A compiler for Liquid templates on Hakyll.
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Hakyll.Web.Liquid
+  build-depends:       base
+                     , aeson
+                     , attoparsec
+                     , hakyll
+                     , liquoh
+                     , mtl
+                     , text
+                     , validation
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/kakkun61/hakyll-liquid

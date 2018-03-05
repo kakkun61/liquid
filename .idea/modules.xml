@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/liquoh.iml" filepath="$PROJECT_DIR$/liquoh.iml" />
+      <module fileurl="file://$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" filepath="$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/liquoh/liquoh.iml" filepath="$PROJECT_DIR$/liquoh/liquoh.iml" />
     </modules>
   </component>
 </project>

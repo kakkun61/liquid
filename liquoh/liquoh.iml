@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/app" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/test" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.stack-work" />
+      <excludeFolder url="file://$MODULE_DIR$/out" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -164,5 +165,11 @@
     <orderEntry type="library" name="monads-tf-0.1.0.3" level="project" />
     <orderEntry type="library" name="options-1.2.1.1" level="project" />
     <orderEntry type="library" name="utf8-string-1.0.1.1" level="project" />
+    <orderEntry type="library" name="HUnit-1.6.0.0" level="project" />
+    <orderEntry type="library" name="hspec-2.4.4" level="project" />
+    <orderEntry type="library" name="hspec-core-2.4.4" level="project" />
+    <orderEntry type="library" name="hspec-discover-2.4.4" level="project" />
+    <orderEntry type="library" name="hspec-expectations-0.8.2" level="project" />
+    <orderEntry type="library" name="quickcheck-io-0.2.0" level="project" />
   </component>
 </module>
