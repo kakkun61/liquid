@@ -3,6 +3,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Text.Liquor.Jekyll.Recursive where
 
@@ -18,7 +21,9 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.IO as Text
 import qualified Data.Yaml as Yaml
-import System.FilePath (FilePath, (</>))
+import Path (Path)
+import qualified Path
+import System.FilePath ((</>))
 import qualified System.FilePath as FilePath
 
 import Text.Liquor.Common
@@ -66,6 +71,8 @@ aggregateStatements ts ps = foldl' (flip ($)) ps ts
 aggregate :: Aggregate s => Template e s -> [Text]
 aggregate = nub . foldl' (flip $ foldStatement aggregateAlgebra) []
 
+type TemplateTuple e s = (Template e s, Context, [FilePath], Maybe FilePath)
+
 loadAndParseAndInterpret
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
   => Context
@@ -74,8 +81,8 @@ loadAndParseAndInterpret
   -> (Text -> Result (Template e s))
   -> m Text
 loadAndParseAndInterpret context filePath loader parser = do
-  ds <- loadAndParseRecursively filePath loader parser
-  case interpretRecursively context ds filePath of
+  deps <- loadAndParseRecursively filePath loader parser
+  case interpretRecursively context deps filePath of
     Left err -> throwM $ LiquidJekyllException err
     Right text -> pure text
 
@@ -84,98 +91,131 @@ loadAndParseAndInterpret'
   => Context
   -> FilePath
   -> Text
+  -> Maybe FilePath
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
   -> m Text
-loadAndParseAndInterpret' context filePath source loader parser = do
+loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
   case parser source of
     Left err -> throwM $ LiquidJekyllException err
     Right template -> do
+      path <- Path.parseRelFile filePath
       let
-        dependencies = (FilePath.takeDirectory filePath </>) . Text.unpack <$> aggregate template
-        acc = HashMap.fromList [(filePath, (template, context, dependencies))]
-      ds <- loadAndParseRecursively' dependencies acc loader parser
-      case interpretRecursively context ds filePath of
+        directory = FilePath.takeDirectory filePath
+        dependencies = (directory </>) . Text.unpack <$> aggregate template
+        rest =
+          case maybeLayout of
+            Just layout -> (directory </> layout) : dependencies
+            Nothing -> dependencies
+        acc = HashMap.fromList [(path, (template, context, dependencies, maybeLayout))]
+      tuples <- loadAndParseRecursively' rest acc loader parser
+      case interpretRecursively context tuples filePath of
         Left err -> throwM $ LiquidJekyllException err
         Right text -> pure text
 
--- width first search
 loadAndParseRecursively
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => FilePath
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
-  -> m (HashMap FilePath (Template e s, Context, [FilePath]))
+  -> m (HashMap (Path Path.Rel Path.File) (TemplateTuple e s))
 loadAndParseRecursively filePath = loadAndParseRecursively' [filePath] HashMap.empty
 
+-- width first search
 loadAndParseRecursively'
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => [FilePath]
-  -> HashMap FilePath (Template e s, Context, [FilePath])
+  -> HashMap (Path Path.Rel Path.File) (TemplateTuple e s)
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
-  -> m (HashMap FilePath (Template e s, Context, [FilePath]))
-loadAndParseRecursively' (filePath':r) acc loader parser = do
-  if HashMap.member filePath' acc
+  -> m (HashMap (Path Path.Rel Path.File) (TemplateTuple e s))
+loadAndParseRecursively' (filePath:r) acc loader parser = do
+  path <- Path.parseRelFile filePath
+  if HashMap.member path acc
     then
       loadAndParseRecursively' r acc loader parser
     else do
-      (source, context) <- loader filePath'
+      (source, context) <- loader filePath
       case parser source of
         Left err -> throwM $ LiquidJekyllException err
         Right template -> do
           let
-            dependencies = (FilePath.takeDirectory filePath' </>) . Text.unpack <$> aggregate template
-            acc' = HashMap.insert filePath' (template, context, dependencies) acc
-          loadAndParseRecursively' (r <> dependencies) acc' loader parser
+            dependencies = (FilePath.takeDirectory filePath </>) . Text.unpack <$> aggregate template
+            (layout, filePaths) =
+              case HashMap.lookup "layout" context of
+                Just (Aeson.String layout') ->
+                  let layout'' = Text.unpack layout'
+                  in (Just layout'', layout'' : r <> dependencies)
+                _ -> (Nothing, r <> dependencies)
+            acc' = HashMap.insert path (template, context, dependencies, layout) acc
+          loadAndParseRecursively' filePaths acc' loader parser
 loadAndParseRecursively' [] acc _ _ = pure acc
 
 -- depth first search
 interpretRecursively
   :: (Evaluate e, Interpret s)
   => Context
-  -> HashMap FilePath (Template e s, Context, [FilePath])
+  -> HashMap (Path Path.Rel Path.File) (TemplateTuple e s)
   -> FilePath
   -> Result Text
-interpretRecursively context dependencies filePath = do
-  rs <- interpretRecursively' dependencies HashMap.empty filePath
-  case HashMap.lookup filePath rs of
+interpretRecursively globalContext tuples filePath = do
+  rs <- interpretRecursively' HashMap.empty filePath filePath Nothing
+  path <- Path.parseRelFile filePath
+  case HashMap.lookup path rs of
     Just t -> Right t
     Nothing -> Left "interpreting failed: code error"
   where
     interpretRecursively'
-       :: (Evaluate e, Interpret s)
-       => HashMap FilePath (Template e s, Context, [FilePath])
-       -> HashMap FilePath Text
+       :: HashMap (Path Path.Rel Path.File) Text
        -> FilePath
-       -> Result (HashMap FilePath Text)
-    interpretRecursively' ds rs p =
-      case HashMap.lookup p rs of
+       -> FilePath
+       -> Maybe Text
+       -> Result (HashMap (Path Path.Rel Path.File) Text)
+    interpretRecursively' rs searchFilePath saveFilePath maybeContent = do
+      savePath <- Path.parseRelFile saveFilePath
+      searchPath <- Path.parseRelFile searchFilePath
+      case HashMap.lookup savePath rs of
         Just _ -> Right rs
         Nothing ->
-          case HashMap.lookup p ds of
-            Nothing -> Left $ "parsed template not found: " <> Text.pack p
-            Just (template, context', []) -> do
-              t <- interpret (HashMap.union context' context) template
-              pure $ HashMap.insert p t rs
-            Just (template, context', deps) -> do
+          case HashMap.lookup searchPath tuples of
+            Nothing -> Left $ "parsed template not found: " <> Text.pack searchFilePath
+            Just (template, fileContext, [], Nothing) -> do
+              let c = addContentIfNecessary $ HashMap.union fileContext globalContext
+              content' <- interpret c template
+              pure $ HashMap.insert savePath content' rs
+            Just (template, fileContext, [], Just layout) -> do
+              let c = addContentIfNecessary $ HashMap.union fileContext globalContext
+              content' <- interpret c template
+              interpretRecursively' rs layout saveFilePath (Just content')
+            Just (template, fileContext, deps, Nothing) -> do
               rs' <- depsLoop rs deps
-              let c = unionContext p (HashMap.union context' context) rs'
-              t <- interpret c template
-              pure $ HashMap.insert p t rs
+              let c = addContentIfNecessary $ unionContext searchFilePath (HashMap.union fileContext globalContext) rs'
+              content' <- interpret c template
+              pure $ HashMap.insert savePath content' rs
+            Just (template, fileContext, deps, Just layout) -> do
+              rs' <- depsLoop rs deps
+              let c = addContentIfNecessary $ unionContext searchFilePath (HashMap.union fileContext globalContext) rs'
+              content' <- interpret c template
+              interpretRecursively' rs' layout saveFilePath (Just content')
       where
-        depsLoop :: HashMap FilePath Text -> [FilePath] -> Result (HashMap FilePath Text)
+        depsLoop :: HashMap (Path Path.Rel Path.File) Text -> [FilePath] -> Result (HashMap (Path Path.Rel Path.File) Text)
         depsLoop rs' = foldl' go (Right rs')
           where
-            go :: Result (HashMap FilePath Text) -> FilePath -> Result (HashMap FilePath Text)
+            go :: Result (HashMap (Path Path.Rel Path.File) Text) -> FilePath -> Result (HashMap (Path Path.Rel Path.File) Text)
             go (Left err) _ = Left err
-            go (Right rs'') p' = interpretRecursively' ds rs'' p'
+            go (Right rs'') p = interpretRecursively' rs'' p p Nothing
 
-    unionContext :: FilePath -> Context ->  HashMap FilePath Text ->Context
+        addContentIfNecessary :: Context -> Context
+        addContentIfNecessary =
+          case maybeContent of
+            Just content -> HashMap.insert "content" (Aeson.String content)
+            Nothing -> id
+
+    unionContext :: FilePath -> Context -> HashMap (Path Path.Rel Path.File) Text -> Context
     unionContext p = HashMap.foldlWithKey' go
       where
-        go :: Context -> FilePath -> Text -> Context
-        go c q t = HashMap.insert (variableFilePrefix <> Text.pack (FilePath.makeRelative (FilePath.dropFileName p) q)) (Aeson.String t) c
+        go :: Context -> (Path Path.Rel Path.File) -> Text -> Context
+        go c q t = HashMap.insert (variableFilePrefix <> Text.pack (FilePath.makeRelative (FilePath.dropFileName p) (Path.toFilePath q))) (Aeson.String t) c
 
 load :: FilePath -> IO (Text, Context)
 load filePath = do
@@ -202,3 +242,6 @@ load filePath = do
     separator = "---\n"
     separatorLength :: Int
     separatorLength = 4
+
+instance {-# OVERLAPPING #-} MonadThrow (Either Text) where
+  throwM = Left . Text.pack . show

@@ -6,6 +6,7 @@ import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Semigroup ((<>))
 import Data.Text (Text)
+import System.Directory
 import Test.Hspec hiding (context)
 import Test.Mockery.Directory
 
@@ -95,7 +96,7 @@ spec = do
           ] :: JekyllTemplate
       aggregate template `shouldMatchList` ["foo"]
 
-  describe "loadAndParseAndInterpret" $
+  describe "loadAndParseAndInterpret" $ do
     it "The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
       inTempDirectory $ do
         writeFile
@@ -110,7 +111,22 @@ spec = do
         result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
-  describe "loadAndParseAndInterpret'" $
+    it "layout: The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
+      inTempDirectory $ do
+        writeFile
+          "fox.txt"
+          (  "---\n"
+          <> "layout: dir/wrap.txt\n"
+          <> "---\n"
+          <> "The quick brown fox"
+          )
+        createDirectory "dir"
+        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dog.txt %}"
+        writeFile "dir/dog.txt" "dog"
+        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result `shouldBe` "The quick brown fox jumps over the lazy dog"
+
+  describe "loadAndParseAndInterpret'" $ do
     it "The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
       inTempDirectory $ do
         let
@@ -125,5 +141,23 @@ spec = do
         (source, context) <- load filePath
         writeFile "lazy-dog.txt" "the lazy {% include dog.txt %}"
         writeFile "dog.txt" "dog"
-        result <- loadAndParseAndInterpret' context filePath source load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret' context filePath source Nothing load (parse :: Text -> Result JekyllTemplate)
+        result `shouldBe` "The quick brown fox jumps over the lazy dog"
+
+    it "layout: The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
+      inTempDirectory $ do
+        let
+          filePath = "fox.txt"
+        writeFile
+          filePath
+          (  "---\n"
+          <> "layout: dir/wrap.txt\n"
+          <> "---\n"
+          <> "The quick brown fox"
+          )
+        (source, context) <- load filePath
+        createDirectory "dir"
+        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dog.txt %}"
+        writeFile "dir/dog.txt" "dog"
+        result <- loadAndParseAndInterpret' context filePath source (Just "dir/wrap.txt") load (parse :: Text -> Result JekyllTemplate)
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
