@@ -12,5 +12,6 @@
         <option name="USE_RELATIVE_INDENTS" value="false" />
       </value>
     </option>
+    <option name="LINE_SEPARATOR" value="&#10;" />
   </code_scheme>
 </component>

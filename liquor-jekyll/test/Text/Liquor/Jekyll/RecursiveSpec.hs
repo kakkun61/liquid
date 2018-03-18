@@ -4,12 +4,12 @@ module Text.Liquor.Jekyll.RecursiveSpec where
 
 import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.Semigroup ((<>))
 import Data.Text (Text)
-import Test.Hspec
+import Test.Hspec hiding (context)
 import Test.Mockery.Directory
 
 import Text.Liquor.Interpreter
-import Text.Liquor.Interpreter.Statement
 import Text.Liquor.Jekyll.Interpreter (JekyllTemplate)
 import Text.Liquor.Jekyll.Parser (parse)
 import Text.Liquor.Jekyll.Recursive
@@ -95,17 +95,35 @@ spec = do
           ] :: JekyllTemplate
       aggregate template `shouldMatchList` ["foo"]
 
-  describe "recursive" $
+  describe "loadAndParseAndInterpret" $
     it "The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
       inTempDirectory $ do
         writeFile
           "fox.txt"
           (  "---\n"
-          ++ "fox: The quick brown fox\n"
-          ++ "---\n"
-          ++ "{{ fox }} jumps over {% include lazy-dog.txt %}"
+          <> "fox: The quick brown fox\n"
+          <> "---\n"
+          <> "{{ fox }} jumps over {% include lazy-dog.txt %}"
           )
         writeFile "lazy-dog.txt" "the lazy {% include dog.txt %}"
         writeFile "dog.txt" "dog"
         result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result `shouldBe` "The quick brown fox jumps over the lazy dog"
+
+  describe "loadAndParseAndInterpret'" $
+    it "The quick brown fox jumps over {% include lazy-dog.txt %}" $ do
+      inTempDirectory $ do
+        let
+          filePath = "fox.txt"
+        writeFile
+          filePath
+          (  "---\n"
+          <> "fox: The quick brown fox\n"
+          <> "---\n"
+          <> "{{ fox }} jumps over {% include lazy-dog.txt %}"
+          )
+        (source, context) <- load filePath
+        writeFile "lazy-dog.txt" "the lazy {% include dog.txt %}"
+        writeFile "dog.txt" "dog"
+        result <- loadAndParseAndInterpret' context filePath source load (parse :: Text -> Result JekyllTemplate)
         result `shouldBe` "The quick brown fox jumps over the lazy dog"

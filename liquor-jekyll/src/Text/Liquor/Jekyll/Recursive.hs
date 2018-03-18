@@ -63,7 +63,7 @@ instance Aggregate Include where
 aggregateStatements :: [[Text] -> [Text]] -> [Text] -> [Text]
 aggregateStatements ts ps = foldl' (flip ($)) ps ts
 
-aggregate :: Aggregate s => [Statement e s] -> [Text]
+aggregate :: Aggregate s => Template e s -> [Text]
 aggregate = nub . foldl' (flip $ foldStatement aggregateAlgebra) []
 
 loadAndParseAndInterpret
@@ -79,6 +79,26 @@ loadAndParseAndInterpret context filePath loader parser = do
     Left err -> throwM $ LiquidJekyllException err
     Right text -> pure text
 
+loadAndParseAndInterpret'
+  :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
+  => Context
+  -> FilePath
+  -> Text
+  -> (FilePath -> m (Text, Context))
+  -> (Text -> Result (Template e s))
+  -> m Text
+loadAndParseAndInterpret' context filePath source loader parser = do
+  case parser source of
+    Left err -> throwM $ LiquidJekyllException err
+    Right template -> do
+      let
+        dependencies = (FilePath.takeDirectory filePath </>) . Text.unpack <$> aggregate template
+        acc = HashMap.fromList [(filePath, (template, context, dependencies))]
+      ds <- loadAndParseRecursively' dependencies acc loader parser
+      case interpretRecursively context ds filePath of
+        Left err -> throwM $ LiquidJekyllException err
+        Right text -> pure text
+
 -- width first search
 loadAndParseRecursively
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
@@ -87,28 +107,28 @@ loadAndParseRecursively
   -> (Text -> Result (Template e s))
   -> m (HashMap FilePath (Template e s, Context, [FilePath]))
 loadAndParseRecursively filePath = loadAndParseRecursively' [filePath] HashMap.empty
-  where
-    loadAndParseRecursively'
-      :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
-      => [FilePath]
-      -> HashMap FilePath (Template e s, Context, [FilePath])
-      -> (FilePath -> m (Text, Context))
-      -> (Text -> Result (Template e s))
-      -> m (HashMap FilePath (Template e s, Context, [FilePath]))
-    loadAndParseRecursively' (filePath':r) acc loader parser = do
-      if HashMap.member filePath' acc
-        then
-          loadAndParseRecursively' r acc loader parser
-        else do
-          (source, context) <- loader filePath'
-          case parser source of
-            Left err -> throwM $ LiquidJekyllException err
-            Right template -> do
-              let
-                dependencies = (FilePath.takeDirectory filePath' </>) . Text.unpack <$> aggregate template
-                acc' = HashMap.insert filePath' (template, context, dependencies) acc
-              loadAndParseRecursively' (r <> dependencies) acc' loader parser
-    loadAndParseRecursively' [] acc _ _ = pure acc
+
+loadAndParseRecursively'
+  :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
+  => [FilePath]
+  -> HashMap FilePath (Template e s, Context, [FilePath])
+  -> (FilePath -> m (Text, Context))
+  -> (Text -> Result (Template e s))
+  -> m (HashMap FilePath (Template e s, Context, [FilePath]))
+loadAndParseRecursively' (filePath':r) acc loader parser = do
+  if HashMap.member filePath' acc
+    then
+      loadAndParseRecursively' r acc loader parser
+    else do
+      (source, context) <- loader filePath'
+      case parser source of
+        Left err -> throwM $ LiquidJekyllException err
+        Right template -> do
+          let
+            dependencies = (FilePath.takeDirectory filePath' </>) . Text.unpack <$> aggregate template
+            acc' = HashMap.insert filePath' (template, context, dependencies) acc
+          loadAndParseRecursively' (r <> dependencies) acc' loader parser
+loadAndParseRecursively' [] acc _ _ = pure acc
 
 -- depth first search
 interpretRecursively
