@@ -57,6 +57,7 @@
     <orderEntry type="library" name="lens-4.15.4" level="project" />
     <orderEntry type="library" name="lens-aeson-1.0.2" level="project" />
     <orderEntry type="library" name="lifted-base-0.2.3.11" level="project" />
+    <orderEntry type="library" name="liquor" level="project" />
     <orderEntry type="library" name="logging-facade-0.3.0" level="project" />
     <orderEntry type="library" name="mmorph-1.1.0" level="project" />
     <orderEntry type="library" name="mockery-0.3.5" level="project" />
@@ -100,8 +101,5 @@
     <orderEntry type="library" name="vector-0.12.0.1" level="project" />
     <orderEntry type="library" name="void-0.7.2" level="project" />
     <orderEntry type="library" name="yaml-0.8.28" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
   </component>
 </module>

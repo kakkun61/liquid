@@ -121,6 +121,8 @@
     <orderEntry type="library" name="liquid-0.1.0.3" level="project" />
     <orderEntry type="library" name="liquoh" level="project" />
     <orderEntry type="library" name="liquoh-0.1.0.0" level="project" />
+    <orderEntry type="library" name="liquor" level="project" />
+    <orderEntry type="library" name="liquor-jekyll" level="project" />
     <orderEntry type="library" name="lrucache-1.2.0.0" level="project" />
     <orderEntry type="library" name="memory-0.14.11" level="project" />
     <orderEntry type="library" name="mime-types-0.1.0.7" level="project" />
@@ -214,12 +216,5 @@
     <orderEntry type="library" name="yaml-0.8.28" level="project" />
     <orderEntry type="library" name="zip-archive-0.3.2.2" level="project" />
     <orderEntry type="library" name="zlib-0.6.1.2" level="project" />
-    <orderEntry type="library" name="liquor-jekyll" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
-    <orderEntry type="library" name="liquor-jekyll" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
-    <orderEntry type="library" name="liquor-jekyll" level="project" />
-    <orderEntry type="library" name="liquor" level="project" />
-    <orderEntry type="library" name="liquor-jekyll" level="project" />
   </component>
 </module>
