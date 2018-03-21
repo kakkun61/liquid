@@ -3,7 +3,7 @@
 module Text.Liquor.Interpreter.StatementSpec where
 
 import Prelude hiding (Bool, String)
-import Test.Hspec
+import Test.Hspec hiding (context)
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (NonEmpty ((:|)))
@@ -11,9 +11,7 @@ import qualified Data.Vector as Vector
 
 import Text.Liquor.Interpreter (ShopifyExpression, ShopifyStatement)
 import Text.Liquor.Interpreter.Expression hiding (Shopify)
-import qualified Text.Liquor.Interpreter.Expression as E
 import Text.Liquor.Interpreter.Statement hiding (Shopify)
-import qualified Text.Liquor.Interpreter.Statement as T
 
 spec :: Spec
 spec = do

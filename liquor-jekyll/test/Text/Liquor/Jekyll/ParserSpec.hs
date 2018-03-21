@@ -7,9 +7,7 @@ module Text.Liquor.Jekyll.ParserSpec where
 
 import Prelude hiding (Bool, String)
 import qualified Prelude
-import Test.Hspec
-import Data.Aeson ((.=))
-import qualified Data.Aeson as Aeson
+import Test.Hspec hiding (context)
 import Data.Attoparsec.Text (parseOnly)
 import Data.Bifunctor
 import Data.List.NonEmpty (NonEmpty ((:|)))
@@ -193,7 +191,6 @@ spec = do
 
       it "x" $ do
         let
-          context = Aeson.object ["x" .= Aeson.String "x"]
           input = "x"
           output = Variable (E.ObjectKey "x" :| [])
         mapEAdt <$> (parseOnly expression input :: Either Prelude.String ShopifyExpression)
