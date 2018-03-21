@@ -18,11 +18,13 @@ library
   hs-source-dirs:      src
   exposed-modules:     Hakyll.Web.Liquid
   build-depends:       base
+                     , aeson
                      , exceptions
                      , hakyll
                      , liquor-jekyll
                      , mtl
                      , text
+                     , unordered-containers
   default-language:    Haskell2010
   ghc-options:         -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
 
