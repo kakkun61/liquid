@@ -121,7 +121,7 @@ spec = do
           <> "The quick brown fox"
           )
         createDirectory "dir"
-        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dog.txt %}"
+        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dir/dog.txt %}"
         writeFile "dir/dog.txt" "dog"
         result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
@@ -157,7 +157,7 @@ spec = do
           )
         (source, context) <- load filePath
         createDirectory "dir"
-        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dog.txt %}"
+        writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dir/dog.txt %}"
         writeFile "dir/dog.txt" "dog"
         result <- loadAndParseAndInterpret' context filePath source (Just "dir/wrap.txt") load (parse :: Text -> Result JekyllTemplate)
         result `shouldBe` "The quick brown fox jumps over the lazy dog"

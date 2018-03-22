@@ -23,8 +23,6 @@ import qualified Data.Text.IO as Text
 import qualified Data.Yaml as Yaml
 import Path (Path)
 import qualified Path
-import System.FilePath ((</>))
-import qualified System.FilePath as FilePath
 
 import Text.Liquor.Common
 import Text.Liquor.Interpreter
@@ -34,6 +32,8 @@ import Text.Liquor.Interpreter.Statement
 import Text.Liquor.Jekyll.Common
 import Text.Liquor.Jekyll.Interpreter
 import Text.Liquor.Jekyll.Interpreter.Statement
+
+import Debug.Trace
 
 class Functor f => Aggregate f where
   aggregateAlgebra :: f ([Text] -> [Text]) -> [Text] -> [Text]
@@ -80,7 +80,7 @@ loadAndParseAndInterpret
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
   -> m Text
-loadAndParseAndInterpret context filePath loader parser = do
+loadAndParseAndInterpret context filePath loader parser = trace ("loadAndParseAndInterpret: " <> filePath) $ do
   deps <- loadAndParseRecursively filePath loader parser
   case interpretRecursively context deps filePath of
     Left err -> throwM $ LiquidJekyllException err
@@ -95,17 +95,16 @@ loadAndParseAndInterpret'
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
   -> m Text
-loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
+loadAndParseAndInterpret' context filePath source maybeLayout loader parser = trace ("loadAndParseAndInterpret': " <> filePath <> " " <> show maybeLayout) $ do
   case parser source of
     Left err -> throwM $ LiquidJekyllException err
     Right template -> do
       path <- Path.parseRelFile filePath
       let
-        directory = FilePath.takeDirectory filePath
-        dependencies = (directory </>) . Text.unpack <$> aggregate template
+        dependencies = Text.unpack <$> aggregate template
         rest =
           case maybeLayout of
-            Just layout -> (directory </> layout) : dependencies
+            Just layout -> layout : dependencies -- TODO: layout のファイルのルートディレクトリーを設定ファイルで指定できるようにする
             Nothing -> dependencies
         acc = HashMap.fromList [(path, (template, context, dependencies, maybeLayout))]
       tuples <- loadAndParseRecursively' rest acc loader parser
@@ -129,7 +128,7 @@ loadAndParseRecursively'
   -> (FilePath -> m (Text, Context))
   -> (Text -> Result (Template e s))
   -> m (HashMap (Path Path.Rel Path.File) (TemplateTuple e s))
-loadAndParseRecursively' (filePath:r) acc loader parser = do
+loadAndParseRecursively' (filePath:r) acc loader parser = trace ("loadAndParseRecursively': " <> show (filePath:r)) $ do
   path <- Path.parseRelFile filePath
   if HashMap.member path acc
     then
@@ -140,14 +139,14 @@ loadAndParseRecursively' (filePath:r) acc loader parser = do
         Left err -> throwM $ LiquidJekyllException err
         Right template -> do
           let
-            dependencies = (FilePath.takeDirectory filePath </>) . Text.unpack <$> aggregate template
-            (layout, filePaths) =
+            dependencies = Text.unpack <$> aggregate template -- TODO: include するファイルのルートディレクトリーを設定ファイルで指定できるようにする
+            (maybeLayout, filePaths) =
               case HashMap.lookup "layout" context of
-                Just (Aeson.String layout') ->
-                  let layout'' = Text.unpack layout'
-                  in (Just layout'', layout'' : r <> dependencies)
+                Just (Aeson.String layout) ->
+                  let layout' = Text.unpack layout -- TODO: layout のファイルのルートディレクトリーを設定ファイルで指定できるようにする
+                  in (Just layout', layout' : r <> dependencies)
                 _ -> (Nothing, r <> dependencies)
-            acc' = HashMap.insert path (template, context, dependencies, layout) acc
+            acc' = HashMap.insert path (template, context, dependencies, maybeLayout) acc
           loadAndParseRecursively' filePaths acc' loader parser
 loadAndParseRecursively' [] acc _ _ = pure acc
 
@@ -214,11 +213,11 @@ interpretRecursively globalContext tuples filePath = do
     unionContext :: FilePath -> Context -> HashMap (Path Path.Rel Path.File) Text -> Context
     unionContext p = HashMap.foldlWithKey' go
       where
-        go :: Context -> (Path Path.Rel Path.File) -> Text -> Context
-        go c q t = HashMap.insert (variableFilePrefix <> Text.pack (FilePath.makeRelative (FilePath.dropFileName p) (Path.toFilePath q))) (Aeson.String t) c
+        go :: Context -> Path Path.Rel Path.File -> Text -> Context
+        go c q t = HashMap.insert (variableFilePrefix <> Text.pack (Path.toFilePath q)) (Aeson.String t) c
 
 load :: FilePath -> IO (Text, Context)
-load filePath = do
+load filePath = trace ("load: " <> filePath) $ do
   body <- Text.readFile filePath
   case Text.breakOn separator body of
     ("", r) ->
