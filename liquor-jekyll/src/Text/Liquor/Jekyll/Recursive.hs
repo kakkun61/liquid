@@ -180,9 +180,10 @@ interpretRecursively context tuples filePath = do
                 Nothing -> pure $ HashMap.insert saveFilePath content' rs
                 Just layout -> interpretRecursively' c rs (FilePath.normalise layout) saveFilePath (Just content')
             Just (template, fileContext, deps, maybeLayout) -> do
-              rs' <- depsLoop context' rs deps
-              let c = addContentIfNecessary $ unionContext (HashMap.union fileContext context') rs'
-              content' <- interpret c template
+              let c = HashMap.union fileContext context'
+              rs' <- depsLoop c rs deps
+              let c' = addContentIfNecessary $ unionContext c rs'
+              content' <- interpret c' template
               case maybeLayout of
                 Nothing -> pure $ HashMap.insert saveFilePath content' rs
                 Just layout -> interpretRecursively' c rs' (FilePath.normalise layout) saveFilePath (Just content')
