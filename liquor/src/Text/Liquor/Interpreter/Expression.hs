@@ -25,6 +25,8 @@ import qualified Data.Vector as Vector
 import Text.Liquor.Common
 import Text.Liquor.Interpreter.Common
 
+import Debug.Trace
+
 newtype Expression e = Inject (e (Expression e))
 
 foldExpression :: Functor e => (e a -> a) -> Expression e -> a
@@ -138,7 +140,7 @@ variable = inject . Variable
 evaluateVariable :: Context -> VariablePath -> Result ValueData
 evaluateVariable c p
   = either Left (either (Left . Text.pack . Convertible.convErrorMessage) Right . Convertible.safeConvert)
-  $ maybe (Left $ "variable not found: " <> pp p) Right
+  $ maybe (Left $ trace (show (pp p) <> " not in " <> show c) $ "variable not found: " <> pp p) Right
   $ Aeson.Object c ^? build p
   where
     build :: Applicative f => VariablePath -> ((Aeson.Value -> f Aeson.Value) -> Aeson.Value -> f Aeson.Value)

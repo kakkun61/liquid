@@ -217,5 +217,7 @@
     <orderEntry type="library" name="yaml-0.8.28" level="project" />
     <orderEntry type="library" name="zip-archive-0.3.2.2" level="project" />
     <orderEntry type="library" name="zlib-0.6.1.2" level="project" />
+    <orderEntry type="library" name="liquor" level="project" />
+    <orderEntry type="library" name="liquor-jekyll" level="project" />
   </component>
 </module>

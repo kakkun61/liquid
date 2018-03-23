@@ -12,6 +12,7 @@ module Text.Liquor.Jekyll.Interpreter.Statement where
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Semigroup ((<>))
 import qualified Data.Text as Text
+import qualified System.FilePath as FilePath
 
 import Text.Liquor.Interpreter.Common
 import Text.Liquor.Interpreter.Expression hiding (Inject, inject, Shopify, ShopifySuper, at)
@@ -28,7 +29,7 @@ data Include s = Include Text.Text
 
 instance Interpret Include where
   interpretAlgebra (Include filepath) c = do
-    contents <- evaluateVariable c $ ObjectKey (variableFilePrefix <> filepath) :| []
+    contents <- evaluateVariable c $ ObjectKey (variableFilePrefix <> (Text.pack $ FilePath.normalise $ Text.unpack filepath)) :| []
     pure (c, render contents)
 
 include :: Include :<: s => Text.Text -> Statement e s

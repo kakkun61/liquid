@@ -32,10 +32,10 @@ library
                      , containers
                      , convertible
                      , exceptions
+                     , filepath
                      , lens
                      , lens-aeson
                      , liquor
-                     , path
                      , scientific
                      , text
                      , unordered-containers
