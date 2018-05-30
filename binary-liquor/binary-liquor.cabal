@@ -16,7 +16,8 @@ description:
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Binary.Liquor.Expression
+  exposed-modules:     Data.Binary.Liquor.Common
+                     , Data.Binary.Liquor.Expression
   build-depends:       base
                      , binary
                      , liquor

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
@@ -10,6 +11,10 @@ import Data.Vector.Binary ()
 import Data.Word (Word8)
 
 import Text.Liquor.Interpreter.Expression
+
+instance Binary (e (Expression e)) => Binary (Expression e) where
+  put (Inject v) = put v
+  get = Inject <$> get
 
 instance Binary ValueData where
   put (Number v) = put (0 :: Word8) >> put v
