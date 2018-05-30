@@ -19,9 +19,7 @@ import qualified Text.Liquor.Jekyll as Liquid
 
 -- | Parse underlying item and compile it with its metadata as context.
 parseAndInterpretDefault :: Compiler (Item String)
-parseAndInterpretDefault = do
-  metadata <- getMetadata =<< getUnderlying
-  parseAndInterpret metadata
+parseAndInterpretDefault = getUnderlying >>= getMetadata >>= parseAndInterpret
 
 -- | Parse underlying item and compile it with given metadata as context.
 parseAndInterpret :: Metadata -> Compiler (Item String)
