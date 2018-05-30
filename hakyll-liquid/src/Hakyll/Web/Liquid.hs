@@ -37,16 +37,16 @@ parseAndInterpret metadata = do
       Liquid.loadAndParseAndInterpret'
         metadata
         (toFilePath identifier)
-        (Text.pack body)
+        (Liquid.parse $ Text.pack body)
         maybeLayout
         load
-        (Liquid.parse :: Text -> Liquid.Result Liquid.JekyllTemplate)
+        id
   where
-    load :: FilePath -> Compiler (Text, Liquid.Context)
+    load :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
     load filePath = do
       (Item identifier body) <- Hakyll.load (fromFilePath filePath)
       metadata' <- getMetadata identifier
-      pure (Text.pack body, metadata')
+      pure (Liquid.parse $ Text.pack body, metadata')
 
 instance MonadThrow Compiler where
   throwM = throwError . (:[]) . displayException

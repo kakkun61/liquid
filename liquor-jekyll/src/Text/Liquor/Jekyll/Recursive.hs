@@ -74,8 +74,8 @@ loadAndParseAndInterpret
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
   => Context
   -> FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (t, Context))
+  -> (t -> Result (Template e s))
   -> m Text
 loadAndParseAndInterpret context filePath loader parser = do
   deps <- loadAndParseRecursively filePath loader parser
@@ -87,10 +87,10 @@ loadAndParseAndInterpret'
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
   => Context
   -> FilePath
-  -> Text
+  -> t
   -> Maybe FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (t, Context))
+  -> (t -> Result (Template e s))
   -> m Text
 loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
   case parser source of
@@ -112,8 +112,8 @@ loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
 loadAndParseRecursively
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (t, Context))
+  -> (t -> Result (Template e s))
   -> m (HashMap FilePath (TemplateTuple e s))
 loadAndParseRecursively filePath = loadAndParseRecursively' [filePath] HashMap.empty
 
@@ -122,8 +122,8 @@ loadAndParseRecursively'
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => [FilePath]
   -> HashMap FilePath (TemplateTuple e s)
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (t, Context))
+  -> (t -> Result (Template e s))
   -> m (HashMap FilePath (TemplateTuple e s))
 loadAndParseRecursively' (filePath:r) acc loader parser = do
   if HashMap.member filePath acc
