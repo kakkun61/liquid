@@ -74,11 +74,10 @@ loadAndParseAndInterpret
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
   => Context
   -> FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (Result (Template e s), Context))
   -> m Text
-loadAndParseAndInterpret context filePath loader parser = do
-  deps <- loadAndParseRecursively filePath loader parser
+loadAndParseAndInterpret context filePath parser = do
+  deps <- loadAndParseRecursively filePath parser
   case interpretRecursively context deps filePath of
     Left err -> throwM $ LiquidJekyllException err
     Right text -> pure text
@@ -87,13 +86,12 @@ loadAndParseAndInterpret'
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, Evaluate e, Interpret s, MonadThrow m)
   => Context
   -> FilePath
-  -> Text
+  -> Result (Template e s)
   -> Maybe FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (Result (Template e s), Context))
   -> m Text
-loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
-  case parser source of
+loadAndParseAndInterpret' context filePath root maybeLayout parser = do
+  case root of
     Left err -> throwM $ LiquidJekyllException err
     Right template -> do
       let
@@ -104,7 +102,7 @@ loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
             Just layout -> FilePath.normalise layout : dependencies -- TODO: layout のファイルのルートディレクトリーを設定ファイルで指定できるようにする
             Nothing -> dependencies
         acc = HashMap.fromList [(filePath', (template, context, dependencies, maybeLayout))]
-      tuples <- loadAndParseRecursively' rest acc loader parser
+      tuples <- loadAndParseRecursively' rest acc parser
       case interpretRecursively context tuples filePath' of
         Left err -> throwM $ LiquidJekyllException err
         Right text -> pure text
@@ -112,8 +110,7 @@ loadAndParseAndInterpret' context filePath source maybeLayout loader parser = do
 loadAndParseRecursively
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => FilePath
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (Result (Template e s), Context))
   -> m (HashMap FilePath (TemplateTuple e s))
 loadAndParseRecursively filePath = loadAndParseRecursively' [filePath] HashMap.empty
 
@@ -122,16 +119,15 @@ loadAndParseRecursively'
   :: (JekyllStatementSuper e s, ShopifyExpressionSuper e, Aggregate s, MonadThrow m)
   => [FilePath]
   -> HashMap FilePath (TemplateTuple e s)
-  -> (FilePath -> m (Text, Context))
-  -> (Text -> Result (Template e s))
+  -> (FilePath -> m (Result (Template e s), Context))
   -> m (HashMap FilePath (TemplateTuple e s))
-loadAndParseRecursively' (filePath:r) acc loader parser = do
+loadAndParseRecursively' (filePath:r) acc parser = do
   if HashMap.member filePath acc
     then
-      loadAndParseRecursively' r acc loader parser
+      loadAndParseRecursively' r acc parser
     else do
-      (source, context) <- loader filePath
-      case parser source of
+      (result, context) <- parser filePath
+      case result of
         Left err -> throwM $ LiquidJekyllException err
         Right template -> do
           let
@@ -143,8 +139,8 @@ loadAndParseRecursively' (filePath:r) acc loader parser = do
                   in (Just layout', layout' : r <> dependencies)
                 _ -> (Nothing, r <> dependencies)
             acc' = HashMap.insert filePath (template, context, dependencies, maybeLayout) acc
-          loadAndParseRecursively' filePaths acc' loader parser
-loadAndParseRecursively' [] acc _ _ = pure acc
+          loadAndParseRecursively' filePaths acc' parser
+loadAndParseRecursively' [] acc _ = pure acc
 
 -- depth first search
 interpretRecursively

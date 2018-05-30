@@ -108,7 +108,7 @@ spec = do
           )
         writeFile "lazy-dog.txt" "the lazy {% include dog.txt %}"
         writeFile "dog.txt" "dog"
-        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α depends on β as layout, β includes γ" $ do
@@ -123,7 +123,7 @@ spec = do
         createDirectory "dir"
         writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dir/dog.txt %}"
         writeFile "dir/dog.txt" "dog"
-        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α depends on β as layout, β uses α's context" $ do
@@ -138,7 +138,7 @@ spec = do
           )
         createDirectory "dir"
         writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {{ dog }}"
-        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α includes β , β uses α's context" $ do
@@ -151,7 +151,7 @@ spec = do
           <> "The quick brown fox{% include jump.txt %}"
           )
         writeFile "jump.txt" " jumps over the lazy {{ dog }}"
-        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret HashMap.empty "fox.txt" loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
   describe "loadAndParseAndInterpret'" $ do
@@ -167,9 +167,10 @@ spec = do
           <> "{{ fox }} jumps over {% include lazy-dog.txt %}"
           )
         (source, context) <- load filePath
+        let root = parse source
         writeFile "lazy-dog.txt" "the lazy {% include dog.txt %}"
         writeFile "dog.txt" "dog"
-        result <- loadAndParseAndInterpret' context filePath source Nothing load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret' context filePath root Nothing loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α depends on β as layout, β includes γ" $ do
@@ -184,10 +185,11 @@ spec = do
           <> "The quick brown fox"
           )
         (source, context) <- load filePath
+        let root = parse source
         createDirectory "dir"
         writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {% include dir/dog.txt %}"
         writeFile "dir/dog.txt" "dog"
-        result <- loadAndParseAndInterpret' context filePath source (Just "dir/wrap.txt") load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret' context filePath root (Just "dir/wrap.txt") loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α depends on β as layout, β uses α's context" $ do
@@ -203,9 +205,10 @@ spec = do
           <> "The quick brown fox"
           )
         (source, context) <- load filePath
+        let root = parse source
         createDirectory "dir"
         writeFile "dir/wrap.txt" "{{ content }} jumps over the lazy {{ dog }}"
-        result <- loadAndParseAndInterpret' context filePath source (Just "dir/wrap.txt") load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret' context filePath root (Just "dir/wrap.txt") loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
 
     it "α depends on β as layout, β uses α's context" $ do
@@ -220,7 +223,12 @@ spec = do
           <> "The quick brown fox{% include jump.txt %}"
           )
         (source, context) <- load filePath
+        let root = parse source
         writeFile "jump.txt" " jumps over the lazy {{ dog }}"
-        result <- loadAndParseAndInterpret' context filePath source Nothing load (parse :: Text -> Result JekyllTemplate)
+        result <- loadAndParseAndInterpret' context filePath root Nothing loadAndParse
         result `shouldBe` "The quick brown fox jumps over the lazy dog"
-    
+
+loadAndParse :: FilePath -> IO (Result JekyllTemplate, Context)
+loadAndParse filePath' = do
+  (t, c) <- load filePath'
+  pure (parse t, c)

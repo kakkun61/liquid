@@ -26,4 +26,9 @@ main = do
   Text.putStr text
   where
     go :: Context -> FilePath -> IO Text
-    go context filePath = loadAndParseAndInterpret context filePath load (parse :: Text -> Result JekyllTemplate)
+    go context filePath = loadAndParseAndInterpret context filePath loadAndParse
+
+    loadAndParse :: FilePath -> IO (Result JekyllTemplate, Context)
+    loadAndParse filePath' = do
+      (t, c) <- load filePath'
+      pure (parse t, c)

@@ -5,16 +5,17 @@
 module Hakyll.Web.Liquid
   ( parseAndInterpretDefault
   , parseAndInterpret
+  , parse
   ) where
 
 import Control.Monad.Catch (MonadThrow (throwM), Exception (displayException))
 import Control.Monad.Except (MonadError (throwError))
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
-import Data.Text (Text)
 import qualified Data.Text as Text
 import Hakyll hiding (Binary, load)
 import qualified Hakyll
+import Hakyll.Web.Liquid.Instance ()
 import qualified Text.Liquor.Jekyll as Liquid
 
 -- | Parse underlying item and compile it with its metadata as context.
@@ -35,16 +36,22 @@ parseAndInterpret metadata = do
       Liquid.loadAndParseAndInterpret'
         metadata
         (toFilePath identifier)
-        (Text.pack body)
+        (Liquid.parse $ Text.pack body)
         maybeLayout
         load
-        (Liquid.parse :: Text -> Liquid.Result Liquid.JekyllTemplate)
   where
-    load :: FilePath -> Compiler (Text, Liquid.Context)
+    load :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
     load filePath = do
-      (Item identifier body) <- Hakyll.load (fromFilePath filePath)
-      metadata' <- getMetadata identifier
-      pure (Text.pack body, metadata')
+      (Item _ body) <- Hakyll.load (fromFilePath filePath)
+      pure body
+
+-- | Parse underlying item.
+parse :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
+parse filePath = do
+  Item identifier body <- getResourceBody
+  (Item identifier body) <- Hakyll.load (fromFilePath filePath)
+  metadata' <- getMetadata identifier
+  pure (Liquid.parse $ Text.pack body, metadata')
 
 instance MonadThrow Compiler where
   throwM = throwError . (:[]) . displayException
