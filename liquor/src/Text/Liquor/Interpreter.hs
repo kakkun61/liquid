@@ -19,8 +19,8 @@ module Text.Liquor.Interpreter
   , E.Variable
   , E.Less
   , E.LessEqual
-  , E.Grater
-  , E.GraterEqual
+  , E.Greater
+  , E.GreaterEqual
   , E.Equal
   , E.NotEqual
   , E.And

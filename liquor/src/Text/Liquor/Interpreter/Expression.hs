@@ -45,10 +45,10 @@ evaluate c = foldExpression (evaluateAlgebra c)
 inject :: g :<: f => g (Expression f) -> Expression f
 inject = Inject . inj
 
-type Shopify = Value :+: Variable :+: Less :+: LessEqual :+: Grater :+: GraterEqual :+: Equal :+: NotEqual :+: And :+: Or :+: ArrayAt
+type Shopify = Value :+: Variable :+: Less :+: LessEqual :+: Greater :+: GreaterEqual :+: Equal :+: NotEqual :+: And :+: Or :+: ArrayAt
 type ShopifySuper e =
   ( Value :<: e, Variable :<: e
-  , Less :<: e, LessEqual :<: e, Grater :<: e, GraterEqual :<: e, Equal :<: e, NotEqual :<: e
+  , Less :<: e, LessEqual :<: e, Greater :<: e, GreaterEqual :<: e, Equal :<: e, NotEqual :<: e
   , And :<: e, Or :<: e
   , ArrayAt :<: e
   )
@@ -193,36 +193,36 @@ infix 4 .<=.
 
 --- Grater
 
-data Grater e = Grater e e
+data Greater e = Greater e e
   deriving Functor
 
-instance Evaluate Grater where
-  evaluateAlgebra _ (Grater (Right (Bool x)) (Right (Bool y))) = Right $ Bool $ x > y
-  evaluateAlgebra _ (Grater (Right (Number x)) (Right (Number y))) = Right $ Bool $ x > y
-  evaluateAlgebra _ (Grater (Right (String x)) (Right (String y))) = Right $ Bool $ x > y
-  evaluateAlgebra _ (Grater r@(Left _) _) = r
-  evaluateAlgebra _ (Grater _ r@(Left _)) = r
-  evaluateAlgebra _ (Grater _ _) = Left "invalid parameter for grater"
+instance Evaluate Greater where
+  evaluateAlgebra _ (Greater (Right (Bool x)) (Right (Bool y))) = Right $ Bool $ x > y
+  evaluateAlgebra _ (Greater (Right (Number x)) (Right (Number y))) = Right $ Bool $ x > y
+  evaluateAlgebra _ (Greater (Right (String x)) (Right (String y))) = Right $ Bool $ x > y
+  evaluateAlgebra _ (Greater r@(Left _) _) = r
+  evaluateAlgebra _ (Greater _ r@(Left _)) = r
+  evaluateAlgebra _ (Greater _ _) = Left "invalid parameter for grater"
 
-(.>.) :: Grater :<: e => Expression e -> Expression e -> Expression e
-x .>. y = inject (Grater x y)
+(.>.) :: Greater :<: e => Expression e -> Expression e -> Expression e
+x .>. y = inject (Greater x y)
 infix 4 .>.
 
 --- Grater or Equal
 
-data GraterEqual e = GraterEqual e e
+data GreaterEqual e = GreaterEqual e e
   deriving Functor
 
-instance Evaluate GraterEqual where
-  evaluateAlgebra _ (GraterEqual (Right (Bool x)) (Right (Bool y))) = Right $ Bool $ x >= y
-  evaluateAlgebra _ (GraterEqual (Right (Number x)) (Right (Number y))) = Right $ Bool $ x >= y
-  evaluateAlgebra _ (GraterEqual (Right (String x)) (Right (String y))) = Right $ Bool $ x >= y
-  evaluateAlgebra _ (GraterEqual r@(Left _) _) = r
-  evaluateAlgebra _ (GraterEqual _ r@(Left _)) = r
-  evaluateAlgebra _ (GraterEqual _ _) = Left "invalid parameter for grater equal"
+instance Evaluate GreaterEqual where
+  evaluateAlgebra _ (GreaterEqual (Right (Bool x)) (Right (Bool y))) = Right $ Bool $ x >= y
+  evaluateAlgebra _ (GreaterEqual (Right (Number x)) (Right (Number y))) = Right $ Bool $ x >= y
+  evaluateAlgebra _ (GreaterEqual (Right (String x)) (Right (String y))) = Right $ Bool $ x >= y
+  evaluateAlgebra _ (GreaterEqual r@(Left _) _) = r
+  evaluateAlgebra _ (GreaterEqual _ r@(Left _)) = r
+  evaluateAlgebra _ (GreaterEqual _ _) = Left "invalid parameter for grater equal"
 
-(.>=.) :: GraterEqual :<: e => Expression e -> Expression e -> Expression e
-x .>=. y = inject (GraterEqual x y)
+(.>=.) :: GreaterEqual :<: e => Expression e -> Expression e -> Expression e
+x .>=. y = inject (GreaterEqual x y)
 infix 4 .>=.
 
 --- Equal

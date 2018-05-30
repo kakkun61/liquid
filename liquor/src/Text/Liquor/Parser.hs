@@ -294,7 +294,7 @@ expression =
       ]
 
 comparisonOperator
-  :: (I.Equal :<: e, I.NotEqual :<: e, I.GraterEqual :<: e, I.LessEqual :<: e, I.Grater :<: e, I.Less :<: e)
+  :: (I.Equal :<: e, I.NotEqual :<: e, I.GreaterEqual :<: e, I.LessEqual :<: e, I.Greater :<: e, I.Less :<: e)
   => Parser (I.Expression e -> I.Expression e -> I.Expression e)
 comparisonOperator =
   stripped $ eq *> pure (.==.) <|>
