@@ -39,11 +39,10 @@ parseAndInterpret metadata = do
         (toFilePath identifier)
         (Liquid.parse $ Text.pack body)
         maybeLayout
-        load
-        id
+        parse
   where
-    load :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
-    load filePath = do
+    parse :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
+    parse filePath = do
       (Item identifier body) <- Hakyll.load (fromFilePath filePath)
       metadata' <- getMetadata identifier
       pure (Liquid.parse $ Text.pack body, metadata')
