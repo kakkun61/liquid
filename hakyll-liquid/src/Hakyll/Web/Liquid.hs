@@ -5,13 +5,13 @@
 module Hakyll.Web.Liquid
   ( parseAndInterpretDefault
   , parseAndInterpret
+  , parse
   ) where
 
 import Control.Monad.Catch (MonadThrow (throwM), Exception (displayException))
 import Control.Monad.Except (MonadError (throwError))
 import qualified Data.Aeson as Aeson
 import qualified Data.HashMap.Strict as HashMap
-import Data.Text (Text)
 import qualified Data.Text as Text
 import Hakyll hiding (Binary, load)
 import qualified Hakyll
@@ -40,12 +40,13 @@ parseAndInterpret metadata = do
         (Liquid.parse $ Text.pack body)
         maybeLayout
         parse
-  where
-    parse :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
-    parse filePath = do
-      (Item identifier body) <- Hakyll.load (fromFilePath filePath)
-      metadata' <- getMetadata identifier
-      pure (Liquid.parse $ Text.pack body, metadata')
+
+-- | Parse underlying item.
+parse :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
+parse filePath = do
+  (Item identifier body) <- Hakyll.load (fromFilePath filePath)
+  metadata' <- getMetadata identifier
+  pure (Liquid.parse $ Text.pack body, metadata')
 
 instance MonadThrow Compiler where
   throwM = throwError . (:[]) . displayException
