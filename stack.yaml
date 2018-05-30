@@ -4,3 +4,4 @@ packages:
 - liquor
 - liquor-jekyll
 - hakyll-liquid
+- binary-liquor
