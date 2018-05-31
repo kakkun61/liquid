@@ -11,7 +11,7 @@ module Hakyll.Web.Liquid
 import Control.Monad.Catch (MonadThrow (throwM), Exception (displayException))
 import Control.Monad.Except (MonadError (throwError))
 import qualified Data.Aeson as Aeson
-import Data.Binary.Liquor ()
+import Data.Binary.Liquor.Jekyll ()
 import qualified Data.HashMap.Strict as HashMap
 import qualified Data.Text as Text
 import Hakyll hiding (Binary, load)

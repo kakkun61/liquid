@@ -33,6 +33,10 @@ instance Binary ValueData where
       4 -> Array <$> get
       _ -> error "unexpected"
 
+instance Binary (Value e) where
+  put (Value v) = put v
+  get = Value <$> get
+
 instance Binary (Variable e) where
   put (Variable v) = put v
   get = Variable <$> get

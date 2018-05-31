@@ -21,6 +21,7 @@ library
   build-depends:       base
                      , aeson
                      , binary
+                     , binary-liquor-jekyll
                      , exceptions
                      , hakyll
                      , hashable

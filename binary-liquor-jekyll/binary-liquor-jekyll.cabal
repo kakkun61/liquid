@@ -1,4 +1,4 @@
-name:                binary-liquor
+name:                binary-liquor-jekyll
 version:             0.1.0.0
 synopsis:            Binary for Liquor
 homepage:            https://github.com/kakkun61/hakyll-liquid
@@ -16,14 +16,12 @@ description:
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Binary.Liquor
-                     , Data.Binary.Liquor.Common
-                     , Data.Binary.Liquor.Expression
-                     , Data.Binary.Liquor.Statement
+  exposed-modules:     Data.Binary.Liquor.Jekyll
+                     , Data.Binary.Liquor.Jekyll.Statement
   build-depends:       base
                      , binary
-                     , liquor
-                     , vector-binary-instances
+                     , binary-liquor
+                     , liquor-jekyll
   default-language:    Haskell2010
   ghc-options:         -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
 
