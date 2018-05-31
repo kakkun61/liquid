@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/binary-liquor/binary-liquor.iml" filepath="$PROJECT_DIR$/binary-liquor/binary-liquor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/binary-liquor-jekyll/binary-liquor-jekyll.iml" filepath="$PROJECT_DIR$/binary-liquor-jekyll/binary-liquor-jekyll.iml" />
       <module fileurl="file://$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" filepath="$PROJECT_DIR$/hakyll-liquid/hakyll-liquid.iml" />
       <module fileurl="file://$PROJECT_DIR$/liquor/liquor.iml" filepath="$PROJECT_DIR$/liquor/liquor.iml" />
       <module fileurl="file://$PROJECT_DIR$/liquor-jekyll/liquor-jekyll.iml" filepath="$PROJECT_DIR$/liquor-jekyll/liquor-jekyll.iml" />
