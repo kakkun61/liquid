@@ -47,12 +47,11 @@ parseAndInterpret metadata = do
       pure body
 
 -- | Parse underlying item.
-parse :: FilePath -> Compiler (Liquid.Result Liquid.JekyllTemplate, Liquid.Context)
-parse filePath = do
+parse :: Compiler (Item (Liquid.Result Liquid.JekyllTemplate, Liquid.Context))
+parse = do
   Item identifier body <- getResourceBody
-  (Item identifier body) <- Hakyll.load (fromFilePath filePath)
   metadata' <- getMetadata identifier
-  pure (Liquid.parse $ Text.pack body, metadata')
+  makeItem (Liquid.parse $ Text.pack body, metadata')
 
 instance MonadThrow Compiler where
   throwM = throwError . (:[]) . displayException
