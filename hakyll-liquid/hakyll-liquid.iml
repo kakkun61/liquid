@@ -31,6 +31,8 @@
     <orderEntry type="library" name="bifunctors-5.5.2" level="project" />
     <orderEntry type="library" name="bifunctors-5.5" level="project" />
     <orderEntry type="library" name="binary-0.8.5.1" level="project" />
+    <orderEntry type="library" name="binary-liquor-jekyll" level="project" />
+    <orderEntry type="library" name="binary-liquor" level="project" />
     <orderEntry type="library" name="blaze-builder-0.4.0.2" level="project" />
     <orderEntry type="library" name="blaze-html-0.9.0.1" level="project" />
     <orderEntry type="library" name="blaze-markup-0.8.2.0" level="project" />
@@ -198,6 +200,7 @@
     <orderEntry type="library" name="validation-0.6.2" level="project" />
     <orderEntry type="library" name="vault-0.3.0.7" level="project" />
     <orderEntry type="library" name="vector-0.12.0.1" level="project" />
+    <orderEntry type="library" name="vector-binary-instances-0.2.4" level="project" />
     <orderEntry type="library" name="void-0.7.2" level="project" />
     <orderEntry type="library" name="wai-3.2.1.1" level="project" />
     <orderEntry type="library" name="wai-app-static-3.1.6.1" level="project" />
