@@ -37,8 +37,8 @@ data Expression
   | Variable E.VariablePath
   | Less Expression Expression
   | LessEqual Expression Expression
-  | Grater Expression Expression
-  | GraterEqual Expression Expression
+  | Greater Expression Expression
+  | GreaterEqual Expression Expression
   | Equal Expression Expression
   | NotEqual Expression Expression
   | And Expression Expression
@@ -58,8 +58,8 @@ infix 3 .&&.
 infix 2 .||.
 (.<.) = Less
 (.<=.) = LessEqual
-(.>.) = Grater
-(.>=.) = GraterEqual
+(.>.) = Greater
+(.>=.) = GreaterEqual
 (.==.) = Equal
 (./=.) = NotEqual
 (.&&.) = And
@@ -91,11 +91,11 @@ instance MapEAdt E.Less where
 instance MapEAdt E.LessEqual where
   mapEAdtAlgebra (E.LessEqual a b) = LessEqual a b
 
-instance MapEAdt E.Grater where
-  mapEAdtAlgebra (E.Grater a b) = Grater a b
+instance MapEAdt E.Greater where
+  mapEAdtAlgebra (E.Greater a b) = Greater a b
 
-instance MapEAdt E.GraterEqual where
-  mapEAdtAlgebra (E.GraterEqual a b) = GraterEqual a b
+instance MapEAdt E.GreaterEqual where
+  mapEAdtAlgebra (E.GreaterEqual a b) = GreaterEqual a b
 
 instance MapEAdt E.Equal where
   mapEAdtAlgebra (E.Equal a b) = Equal a b
