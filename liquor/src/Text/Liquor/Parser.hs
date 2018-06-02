@@ -375,13 +375,15 @@ template =
   let stmt = statement stmt
   in template' stmt
 
-parse' :: (I.ShopifyStatementSuper e s, I.ShopifyExpressionSuper e) => Parser (I.Template e s) ->Text -> Either Text.Text (I.Template e s)
+parse' :: (I.ShopifyStatementSuper e s, I.ShopifyExpressionSuper e) => Parser (I.Template e s) -> Text -> Either Text.Text (I.Template e s)
 parse' parser input =
   case feed (Attoparsec.parse parser input) Text.empty of
     Fail _ ctxs msg -> Left $ Text.pack $ mconcat $ intersperse ", " $  msg:ctxs
     Partial _ -> Left "not enough inputs"
     Done "" r -> Right r
-    Done _ _ -> Left "unparsed inputs remaining"
+    Done i _ -> do
+      let i' = if Text.length i <= 20 then i else Text.take 20 i <> "..."
+      Left $ "unparsed inputs remaining: " <> i'
 
 -- | Run the templateParser on input text, force partial results to terminate with Failure
 parse :: (I.ShopifyStatementSuper e s, I.ShopifyExpressionSuper e) => Text -> Either Text.Text (I.Template e s)
