@@ -25,8 +25,6 @@ import qualified Data.Vector as Vector
 import Text.Liquor.Common
 import Text.Liquor.Interpreter.Common
 
-import Debug.Trace
-
 newtype Expression e = Inject (e (Expression e))
 
 foldExpression :: Functor e => (e a -> a) -> Expression e -> a

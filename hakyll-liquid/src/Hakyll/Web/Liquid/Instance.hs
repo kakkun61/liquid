@@ -21,8 +21,6 @@ import Hakyll
 
 import Text.Liquor.Jekyll.Interpreter
 
-import Debug.Trace
-
 instance (Binary k, Eq k, Hashable k, Binary v) => Binary (HashMap k v) where
   put a = Binary.put $ HashMap.toList a
   get = HashMap.fromList <$> Binary.get
@@ -69,4 +67,4 @@ instance (Writable a, Writable b) => Writable (Either a b) where
   write p (Item identifier (Right a)) = write p $ Item identifier a
 
 instance Writable JekyllTemplate where
-  write p _ = trace p $ writeFile p "JekyllTemplate"
+  write p _ = writeFile p "JekyllTemplate"
