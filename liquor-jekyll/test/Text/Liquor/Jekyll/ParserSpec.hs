@@ -13,6 +13,7 @@ import Data.Bifunctor
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.Scientific as Scientific
 import Data.String
+import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Vector as Vector
 
@@ -21,7 +22,7 @@ import Text.Liquor.Interpreter (ShopifyExpression)
 import Text.Liquor.Interpreter.Common
 import qualified Text.Liquor.Interpreter.Expression as E
 import qualified Text.Liquor.Interpreter.Statement as S
-import Text.Liquor.Parser (expression)
+import Text.Liquor.Parser (expression, parse)
 import Text.Liquor.Jekyll.Interpreter (JekyllTemplate)
 import qualified Text.Liquor.Jekyll.Interpreter.Statement as S
 import Text.Liquor.Jekyll.Parser (template)
@@ -376,3 +377,11 @@ spec = do
         (mapTAdt <$>) <$> (parseOnly template input :: Either Prelude.String JekyllTemplate)
           `shouldBe`
              Right output
+
+    describe "parse" $ do
+      it "large 1" $ do
+        let
+          input = "<article class=\"book\">\n\n                     <div>\n                       <h1 class=\"book-title\">{{ page.title | escape }}</h1>\n\n                       <div class=\"book-info\">\n                         <div class=\"book-image\"><img src=\"{{ site.baseurl }}{{ page.book_image }}\" alt=\"book front\" class=\"book-front\"></div>\n\n                         <div class=\"book-detail\">\n                           <p>{{ page.description }}</p>\n\n                           <div class=\"book-events\">\n                             {% for event in page.events %}\n                               <span class=\"event-badge\">{{ event.title }}</span>\n                               <ul>\n                                 <li>{{ event.date | date: \"%Y.%m.%d\" }}</li>\n                                 <li>{{ event.place }}</li>\n                                 <li>{{ event.table }}</li>\n                               </ul>\n                             {% endfor %}\n                           </div>\n\n                           <ul class=\"book-authors\">\n                             {% for author in page.authors %}\n                               <li>\n                                 {{ author.name }}\n                                 <a href=\"https://twitter.com/{{ author.twitter }}\"> <span class=\"twitter-icon\"></span>@{{ author.twitter }}</a>\n                               </li>\n                             {% endfor %}\n                           </ul>\n\n                           <table class=\"book-price\">\n                             <tbody>\n                               <tr><td>紙＋電子（即売会）</td><td class=\"price\">¥{{ page.price.event_paper }}</td></tr>\n                               <tr><td>電子（即売会）</td><td class=\"price\">¥{{ page.price.event_ebook }}</td></tr>\n                               <tr><td>電子（オンライン）</td><td class=\"price\">¥{{ page.price.online_ebook }}</td></tr>\n                             </tbody>\n                           </table>\n\n                           <div class=\"book-actions\">\n                             {% if page.sample %}\n                               <a class=\"button\" href=\"{{ page.sample }}\">サンプル PDF</a>\n                             {% endif %}\n                             {% if page.online_sell %}\n                               <a class=\"button\" href=\"{{ page.online_sell }}\">オンライン販売</a>\n                             {% endif %}\n                           </div>\n                         </div>\n                       </div>\n\n                       {% if content %}\n                         <div class=\"content\">\n                           {{ content }}\n                         </div>\n                       {% endif %}\n                     </div>\n                   </article>"
+        (mapTAdt <$>) <$> (parse input :: Either Text JekyllTemplate)
+          `shouldSatisfy`
+            (\r -> case r of { Left _ -> False; Right _ -> True })

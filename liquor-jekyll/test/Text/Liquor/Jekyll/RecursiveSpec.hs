@@ -5,7 +5,6 @@ module Text.Liquor.Jekyll.RecursiveSpec where
 import qualified Data.HashMap.Strict as HashMap
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Semigroup ((<>))
-import Data.Text (Text)
 import System.Directory
 import Test.Hspec hiding (context)
 import Test.Mockery.Directory

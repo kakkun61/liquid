@@ -138,7 +138,7 @@ variable = inject . Variable
 evaluateVariable :: Context -> VariablePath -> Result ValueData
 evaluateVariable c p
   = either Left (either (Left . Text.pack . Convertible.convErrorMessage) Right . Convertible.safeConvert)
-  $ maybe (Left $ trace (show (pp p) <> " not in " <> show c) $ "variable not found: " <> pp p) Right
+  $ maybe (Left $ "variable not found: " <> pp p) Right
   $ Aeson.Object c ^? build p
   where
     build :: Applicative f => VariablePath -> ((Aeson.Value -> f Aeson.Value) -> Aeson.Value -> f Aeson.Value)
